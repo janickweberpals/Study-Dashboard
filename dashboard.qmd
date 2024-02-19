@@ -1,0 +1,55 @@
+---
+title: "Study Dashboard"
+author: "A demonstration using data from the **smdi** package"
+format: dashboard
+server: shiny
+---
+
+```{r}
+#| context: setup
+
+library(smdi)
+library(shiny)
+library(dplyr)
+library(gtsummary)
+library(gt)
+library(glue)
+
+data <- smdi::smdi_data_complete
+```
+
+# {.sidebar}
+
+```{r}
+selectInput(inputId = 'stratum', label = 'Stratify by:', choices = c("exposure", "female_cat", "ecog_cat", "status")) 
+```
+
+```{r}
+#| context: server
+
+dataset <- reactive({x = data})
+
+output$tbl <- render_gt({
+  
+  gtsummary::tbl_summary(
+    data = dataset(), 
+    by = input$stratum
+    ) |> 
+    add_overall() |> 
+    add_difference() |> 
+    # CONVERT TO A {gt} TABLE! VERY IMPORTANT STEP!
+    as_gt() %>%
+    tab_header(
+      title = md("**Table 1. Patient Characteristics**"),
+      subtitle = glue("Stratified by {input$stratum}")
+      )
+
+})
+```
+
+# Table 1
+
+```{r}
+tableOutput('tbl')
+```
+
